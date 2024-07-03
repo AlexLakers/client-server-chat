@@ -10,8 +10,8 @@
   <name>client-server-chat</name>
   <url>https://github.com/AlexLakers/client-server-chat</url>
   <modules>
-    <!--<module>servermodule</module>
-    <module>clientmodule</module>-->
+    <module>servermodule</module>
+    <module>clientmodule</module>
     <module>commonmodule</module>
   </modules>
   <dependencies>
