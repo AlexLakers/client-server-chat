@@ -2,9 +2,11 @@ package com.alex.chat;
 
 
 import com.alex.chat.executor.ExecutorFactory;
+import com.alex.chat.handler.MainHandler;
 import com.alex.chat.utill.Utill;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -38,38 +40,44 @@ public class Server {
             logger.error("An error in the file 'config.properties':[{}]",e.getMessage());
         }
     }
-    private ParamsServer paramsServer;
+    private ParamServer paramServer;
     private ExecutorService mainExecutorService;
 
 
     /**
-     * Creates a new instance of Server with {@link ParamsServer paramsServer} which contains all the necessary params for the server.
-     * @param paramsServer contains the main params for the server.
+     * Creates a new instance of Server with {@link ParamServer paramsServer} which contains all the necessary params for the server.
+     * @param paramServer contains the main params for the server.
      */
-    public Server(ParamsServer paramsServer){
-        this.paramsServer =paramsServer;
-        this.mainExecutorService= ExecutorFactory.createMainExecutor(paramsServer.countMainThread(),paramsServer.capQueue());
-
+    public Server(ParamServer paramServer){
+        this.paramServer=paramServer;
+        this.mainExecutorService= ExecutorFactory.createMainExecutor(paramServer.countMainThread(),paramServer.capQueue());
     }
 
 
-    public static void main( String[] args )throws IOException {
-        ParamsServer props = ParamsServerFactory.tryParseProperties(initProps);
+    public static void main( String[] args ) {
+        ParamServer props=ParamServerParser.tryParseProperties(initProps);
         logger.info("The property file is parsed successful");
-        try (ServerSocket serverSocket = new ServerSocket(5002)) {
-            logger.info("The server port {} is opened", 5002);
-            while (true) {
-                Socket socket = serverSocket.accept();
-                String startMessage = "Server is started";
-                logger.info(startMessage);
-                Utill.writeString(startMessage);
-            }
-        }
+        new Server(props).start();
+        String startMessage="Server is started";
+        logger.info(startMessage);
+        Utill.writeString(startMessage);
     }
 
     /**
      * Performs creating a new {@link ServerSocket serverSocket} and waits for the connection some client.
-     */
+    */
+    public void start(){
+        try(ServerSocket serverSocket=new ServerSocket(paramServer.port())) {
+            logger.info("The server port {} is opened",paramServer.port());
+            while (true) {
+                Socket socket = serverSocket.accept();
+                logger.info("An unauthorized client[{}] is connected",socket.getRemoteSocketAddress());
+                Future mainTask = mainExecutorService.submit(new MainHandler(socket));
 
-
+            }
+        } catch (IOException e) {
+            logger.error("A server error has been detected:[{}]",e.getMessage());
+        }
+    }
 }
+

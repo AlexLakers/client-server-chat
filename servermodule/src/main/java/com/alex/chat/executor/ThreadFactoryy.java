@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * This class is a thread factory that contains defined rules for the every new thread in the thread pool executor.
  */
-public class OwnThreadFactory implements ThreadFactory {
-    private final static Logger logger = LoggerFactory.getLogger(OwnThreadFactory.class);
+public class ThreadFactoryy implements ThreadFactory {
+    private final static Logger logger = LoggerFactory.getLogger(ThreadFactoryy.class);
     private final AtomicInteger countThreads=new AtomicInteger(1);
     private final String NAME_THREAD_PATTERN = "Pool-%1$s-thread-%2$d";
     @Override

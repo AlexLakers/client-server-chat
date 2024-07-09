@@ -6,9 +6,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public final class ParamsServerFactory {
-    private final static Logger logger = LoggerFactory.getLogger(ParamsServerFactory.class);
-    private ParamsServerFactory(){
+public final class ParamServerParser {
+    private final static Logger logger = LoggerFactory.getLogger(ParamServerParser.class);
+    private ParamServerParser(){
 
     }
     private enum PropName {
@@ -27,9 +27,9 @@ public final class ParamsServerFactory {
         }
 
     }
-    public static ParamsServer tryParseProperties(Properties properties) {
+    public static ParamServer tryParseProperties(Properties properties) {
         logger.debug("The parsing process with properties:[{}]",properties);
-        return new ParamsServer(
+        return new ParamServer(
                 Utill.tryParseToInt(properties, PropName.LISTENING_PORT.toString()),
                 Utill.tryParseToInt(properties, PropName.COUNT_MAIN_THREAD.toString()),
                 Utill.tryParseToInt(properties, PropName.COUNT_ERROR_THREAD.toString()),
