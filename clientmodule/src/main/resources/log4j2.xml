@@ -1,0 +1,21 @@
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout disableAnsi="false" pattern="%highlight{d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n}{TRACE=magenta}" charset="UTF-8"/>
+        </Console>
+        <File name="LogToFile" fileName="logs/client.log" append="false">
+            <PatternLayout>
+                <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+    <Loggers>
+        <!--  avoid duplicated logs with additivity=false  -->
+        <Logger name="com.alex.chat" level="info" additivity="false">
+            <AppenderRef ref="LogToFile"/>
+        </Logger>
+        <Root level="error">
+            <AppenderRef ref="LogToFile"/>
+        </Root>
+    </Loggers>
+</Configuration>
