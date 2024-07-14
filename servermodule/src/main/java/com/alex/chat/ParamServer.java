@@ -10,6 +10,7 @@ package com.alex.chat;
 public record ParamServer(int port, int countMainThread, int countErrorThread, int capQueue) {
     @Override
     public String toString() {
-        return String.format("The property file:port=%1$d,mainThread=%2$d,errorThread=%3$d,capQueue=%4$d", port, countMainThread, countErrorThread, capQueue);
+        return String.format("The property file:server.port=%1$d,pool.main.thread.count=%2$d,pool.error.thread.count=%3$d,connections.queue.capacity=%4$d", port, countMainThread, countErrorThread, capQueue);
     }
+
 }

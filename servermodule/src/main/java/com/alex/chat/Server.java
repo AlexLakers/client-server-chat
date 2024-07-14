@@ -2,6 +2,7 @@ package com.alex.chat;
 
 
 import com.alex.chat.executor.ExecutorFactory;
+import com.alex.chat.handler.ErrorHandler;
 import com.alex.chat.handler.MainHandler;
 import com.alex.chat.utill.Utill;
 import org.slf4j.Logger;
@@ -42,22 +43,23 @@ public class Server {
     }
     private ParamServer paramServer;
     private ExecutorService mainExecutorService;
-
+    private ExecutorService errorExecutorService;
 
     /**
      * Creates a new instance of Server with {@link ParamServer paramsServer} which contains all the necessary params for the server.
      * @param paramServer contains the main params for the server.
      */
     public Server(ParamServer paramServer){
-        this.paramServer=paramServer;
-        this.mainExecutorService= ExecutorFactory.createMainExecutor(paramServer.countMainThread(),paramServer.capQueue());
+        this.paramServer = paramServer;
+        this.mainExecutorService= ExecutorFactory.createMainExecutor(paramServer.countMainThread(), paramServer.capQueue());
+        this.errorExecutorService= ExecutorFactory.createErrorExecutor(paramServer.countErrorThread());
     }
 
 
     public static void main( String[] args ) {
-        ParamServer props=ParamServerParser.tryParseProperties(initProps);
+        ParamServer paramServer=ParamServerParser.tryParseProperties(initProps);
         logger.info("The property file is parsed successful");
-        new Server(props).start();
+        new Server(paramServer).start();
         String startMessage="Server is started";
         logger.info(startMessage);
         Utill.writeString(startMessage);
@@ -65,14 +67,30 @@ public class Server {
 
     /**
      * Performs creating a new {@link ServerSocket serverSocket} and waits for the connection some client.
-    */
+     * After it occurs creating a new instance {@link MainHandler mainHandler} by an accepted socket.
+     * Then,it(task) is transmitted to the main executor service to executing in the pool thread.
+     * By the way the main and error executors are created by params in the {@link ParamServer paramsServer}.
+     * If the task was cancelled because the client connection queue is full(capacity queue in the main executor), then occurs creating a new instance {@link ErrorHandler errorHandler}
+     * by the same socket and message about error.Then it is transmitted to another error executor service
+     * to executing in the thread pool and handling error connection.
+     * The IO error has been detected during the creating server socket or getting a socket will handle in the try-catch block.
+     * @see IOException IOException
+     */
     public void start(){
         try(ServerSocket serverSocket=new ServerSocket(paramServer.port())) {
-            logger.info("The server port {} is opened",paramServer.port());
+            logger.info("The server port {} is opened", paramServer.port());
             while (true) {
                 Socket socket = serverSocket.accept();
                 logger.info("An unauthorized client[{}] is connected",socket.getRemoteSocketAddress());
                 Future mainTask = mainExecutorService.submit(new MainHandler(socket));
+                if (mainTask.isCancelled()) {
+                    String queueMessage="A connection queue is full";
+                    logger.warn(queueMessage);
+                    Future errorTask=errorExecutorService.submit(new ErrorHandler(socket,queueMessage));
+                    if (errorTask.isDone()) {
+                        socket.close();
+                    }
+                }
 
             }
         } catch (IOException e) {

@@ -8,7 +8,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 /**
  * This additional class is a chat-client simulator for the testing process.
@@ -60,4 +61,5 @@ public class ClientSimulatorTask implements Callable<String> {
         }
     }
 }
+
 

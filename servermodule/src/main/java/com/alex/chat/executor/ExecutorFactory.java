@@ -1,13 +1,12 @@
 package com.alex.chat.executor;
 
-import com.alex.chat.ParamServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 
 /**
- * This class is a factory for creating two executors by params which are defined in the {@link ParamServer paramServer}.
+ * This class is a factory for creating two executors by params which are defined in the {@link com.alex.chat.params.ParamsServer paramsServer}.
  * It contains the methods that allows to create the error thread pool executor and the main thread pool executor.
  */
 public final class ExecutorFactory {
@@ -21,7 +20,12 @@ public final class ExecutorFactory {
                 0L,
                 TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(capQueue),
-                new ThreadFactoryy());
+                new ThreadFactoryy(),
+                new ServRejectExecutorHandler());
     }
 
+    public static ExecutorService createErrorExecutor(int countErrorThread){
+        logger.debug("The process of creating error executor with countErrorThread[{}]",countErrorThread);
+        return Executors.newFixedThreadPool(countErrorThread);
+    }
 }
