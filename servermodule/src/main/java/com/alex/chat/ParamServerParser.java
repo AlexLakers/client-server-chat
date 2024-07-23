@@ -28,7 +28,9 @@ public final class ParamServerParser {
 
     }
     public static ParamServer tryParseProperties(Properties properties) {
+
         logger.debug("The parsing process with properties:[{}]",properties);
+
         return new ParamServer(
                 Utill.tryParseToInt(properties, PropName.LISTENING_PORT.toString()),
                 Utill.tryParseToInt(properties, PropName.COUNT_MAIN_THREAD.toString()),

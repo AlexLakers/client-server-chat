@@ -13,6 +13,7 @@ public class ServRejectExecutorHandler implements RejectedExecutionHandler {
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
         ((FutureTask)r).cancel(true);
+
         logger.debug("The task of error link is cancelled");
     }
 }

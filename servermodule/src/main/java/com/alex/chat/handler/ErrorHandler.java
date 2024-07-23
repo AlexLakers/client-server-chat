@@ -38,11 +38,14 @@ public class ErrorHandler implements Runnable{
     public void run(){
         try(Link link = new Link(socket)){
             link.writeData(new DataPacket(Headers.ERROR,message));
+
             logger.debug("A new data packet with header[{}],body[{}] has been sent to client[{}]",Headers.ERROR,message,socket.getRemoteSocketAddress());
         }
         catch (IOException e){
             String errorMessage = String.format("An error of handling error link[%1$s]",e.getMessage());
+
             logger.error(errorMessage);
+
             Utill.writeString(errorMessage);
         }
 

@@ -58,10 +58,14 @@ public class Server {
 
     public static void main( String[] args ) {
         ParamServer paramServer=ParamServerParser.tryParseProperties(initProps);
+
         logger.info("The property file is parsed successful");
+
         new Server(paramServer).start();
         String startMessage="Server is started";
+
         logger.info(startMessage);
+
         Utill.writeString(startMessage);
     }
 
@@ -78,14 +82,20 @@ public class Server {
      */
     public void start(){
         try(ServerSocket serverSocket=new ServerSocket(paramServer.port())) {
+
             logger.info("The server port {} is opened", paramServer.port());
+
             while (true) {
                 Socket socket = serverSocket.accept();
+
                 logger.info("An unauthorized client[{}] is connected",socket.getRemoteSocketAddress());
+
                 Future mainTask = mainExecutorService.submit(new MainHandler(socket));
                 if (mainTask.isCancelled()) {
                     String queueMessage="A connection queue is full";
+
                     logger.warn(queueMessage);
+
                     Future errorTask=errorExecutorService.submit(new ErrorHandler(socket,queueMessage));
                     if (errorTask.isDone()) {
                         socket.close();
@@ -94,6 +104,7 @@ public class Server {
 
             }
         } catch (IOException e) {
+
             logger.error("A server error has been detected:[{}]",e.getMessage());
         }
     }

@@ -18,6 +18,7 @@ public class ThreadFactoryy implements ThreadFactory {
         Thread thread =new Thread(r);
         thread.setName(String.format(NAME_THREAD_PATTERN,"clients",countThreads.getAndIncrement()));
         thread.setDaemon(true);
+
         logger.debug("A new thread with name[{}] and his daemon status[{}]",thread.getName(),thread.isDaemon());
         return thread;
     }
