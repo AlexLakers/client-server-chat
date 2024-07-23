@@ -64,21 +64,32 @@ public class MainHandler implements Runnable {
     }
     private void notifyAllClientsWithoutSender(DataPacket mainDataPacket, String senderName) throws IOException{
         logger.debug("The notification all the clients process with DataPacket[{}],sender[{}]",mainDataPacket,senderName);
-        for (var entry : linksMap.entrySet()) {
-            String currName = entry.getKey();
-            Link currLink = entry.getValue();//РўРѕС‚ РјРѕР¶РЅРѕ С‡С‚Рѕ С‚Рѕ С‚РёРїР° СЃС‚СЂРёРјР°
-            if (!currName.equals(senderName)) {
-                currLink.writeData(mainDataPacket);
-                logger.debug("The client[{}] sent the data packet{} to client[{}]",senderName,mainDataPacket,currName);
-            }
+
+        linksMap.entrySet().stream()
+                .filter(entry->!entry.getKey().equals(senderName))
+                .forEach(entry-> sendDataPacket(mainDataPacket, entry.getValue(),senderName,entry.getKey()));
+}
+
+    private void sendDataPacket(DataPacket mainDataPacket, Link link,String senderName,String receiverName) {
+        try {
+            link.writeData(mainDataPacket);
+
+            logger.debug("The client[{}] sent the data packet{} to client[{}]",senderName,mainDataPacket,receiverName);
+        }
+        catch (IOException ioExc){
+            throw new RuntimeException(ioExc);
         }
     }
 
+
     private void handleMainDataPacket(Link link, String senderName) throws IOException, ClassNotFoundException {
         logger.info("The main communication process  for the client[{}] with address[{}] is started",senderName,link.getSocket().getRemoteSocketAddress());
+
         while (true) {
             DataPacket mainDataPacket = link.readData();
+
             logger.debug("The data packet[{}] from{}",mainDataPacket,senderName);
+
             switch (mainDataPacket.getHeader()){
                 case EXCHANGE -> {
                     notifyAllClientsWithoutSender(mainDataPacket,senderName);
@@ -101,6 +112,7 @@ public class MainHandler implements Runnable {
 
     private void removeClientLink(String login) {
         logger.debug("The removing client[{}] process",login);
+
         linksMap.remove(login);
     }
 
@@ -120,11 +132,16 @@ public class MainHandler implements Runnable {
      */
     private String handleHelloDataPacket(Link link) throws IOException, ClassNotFoundException {
         logger.info("The hello communication process for client[{}]",link.getSocket().getRemoteSocketAddress());
+
         while (true) {
             link.writeData(new DataPacket(Headers.WHO_IS));
+
             logger.debug("Sent a new hello data packet");
+
             DataPacket dataPacket = link.readData();
+
             logger.debug("Received the answered data packet[{}]",dataPacket);
+
             //answer
             if (dataPacket.getHeader().equals(Headers.I_AM_HERE)) {
                 String login = dataPacket.getBody();
@@ -132,20 +149,27 @@ public class MainHandler implements Runnable {
                     String warnMessage = String.format("The login[%1$s] is empty or already exists",login);
                     //log
                     logger.warn(warnMessage);
+
                     link.writeData(new DataPacket(Headers.WARNING, warnMessage));
+
                     logger.debug("A new data packet with header[{}] has been sent to sender[{}]",Headers.WARNING,link.getSocket().getRemoteSocketAddress());
                     continue;
                 }
                 linksMap.put(login, link);
+
                 logger.debug("The client[{}] has been added to the linksMap",login);
+
                 link.writeData(new DataPacket(Headers.I_SEE_YOU, login));
+
                 logger.debug("A new data packet with header[{}] has been sent to sender[{}]",Headers.I_SEE_YOU,login);
                 logger.debug("The result of hello  communication process is [{}]",login);
+
                 return login;
             }
             else{
                 String warnMessage ="The data packet from a chat-client contains incorrect header";
                 link.writeData(new DataPacket(Headers.WARNING,warnMessage));
+
                 logger.warn(warnMessage);
             }
         }

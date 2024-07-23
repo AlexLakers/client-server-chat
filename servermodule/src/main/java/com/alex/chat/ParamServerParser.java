@@ -12,10 +12,10 @@ public final class ParamServerParser {
 
     }
     private enum PropName {
-        LISTENING_PORT("serverPort"),
-        COUNT_MAIN_THREAD("mainThread"),
-        COUNT_ERROR_THREAD("errorThread"),
-        CAPACITY_QUEUE("capacityQueue");
+        LISTENING_PORT("server.port"),
+        COUNT_MAIN_THREAD("pool.main.thread.count"),
+        COUNT_ERROR_THREAD("pool.error.thread.count"),
+        CAPACITY_QUEUE("connections.queue.capacity");
         private String propName;
 
         PropName(String propName) {
@@ -28,7 +28,9 @@ public final class ParamServerParser {
 
     }
     public static ParamServer tryParseProperties(Properties properties) {
+
         logger.debug("The parsing process with properties:[{}]",properties);
+
         return new ParamServer(
                 Utill.tryParseToInt(properties, PropName.LISTENING_PORT.toString()),
                 Utill.tryParseToInt(properties, PropName.COUNT_MAIN_THREAD.toString()),
