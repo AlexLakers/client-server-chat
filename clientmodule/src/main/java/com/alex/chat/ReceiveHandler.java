@@ -101,6 +101,16 @@ public class ReceiveHandler extends Thread {
                     Utill.writeString(dataPacket.getBody());
                 }
 
+                case ERROR -> {
+                    Utill.writeString(dataPacket.getBody());
+                    isSuccessConnection = false;
+                    lock.lock();
+                    condition.signalAll();
+                    logger.debug("Wake up of the waiting main thread");
+                    lock.unlock();
+                    logger.error("An error message from server:[{}]",dataPacket.getBody());
+                    return;
+                }
                 default -> {
                     logger.error("Unsupported header[{}] in the packet",dataPacket.getHeader());
                     return;
@@ -112,3 +122,4 @@ public class ReceiveHandler extends Thread {
 
     }
 }
+

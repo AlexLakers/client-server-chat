@@ -43,9 +43,13 @@ public class Client {
 
 
     public static void main(String[] args) {
+        logger.info("Client is started");
         try {
+            Utill.writeString("Enter server IP address");
             InetAddress inetAddress=Utill.readIpAddress();
+            Utill.writeString("Enter server port");
             int port =Utill.readInt();
+            logger.info("The client entered '{}:{}'",inetAddress.getHostAddress(),port);
             new Client(inetAddress,port).start();
 
         } catch (IOException | IllegalArgumentException e) {
@@ -55,10 +59,51 @@ public class Client {
 
     /**
      * Performs creating a new {@link ReceiveHandler receiveHandle} for the handling receive data packets and starts it.
-   */
+     * Then occurs waiting main-thread for authentication process in receiveHandler-thread.
+     * The waiting process occurs using {@link Lock lock} and {@link Condition condition}.
+     * After it occurs the sending process some messages from client to server,
+     * if {@link ReceiveHandler#isSuccessConnection() isSuccessConnection} return true.
+     * If some error has been detected then it will handle in try-catch block.
+     * @see IOException IOException
+     * @see InterruptedException InterruptedException
+     */
     public void start() {
         ReceiveHandler receiveHandler =new ReceiveHandler(link,lock, condition);
+        receiveHandler.setDaemon(true);
+        receiveHandler.start();
+        try {
+            lock.lock();
+            condition.await();
+            logger.info("{} waited for the authentication process",link.getSocket().getLocalSocketAddress());
+            lock.unlock();
 
+            logger.info("{} started the main communication process",receiveHandler.getLogin());
+
+            while (receiveHandler.isSuccessConnection()) {
+
+                String body = Utill.readLine();
+                logger.debug("The client has been entered message[{}]",body);
+                if(body.equalsIgnoreCase("exit")){
+                    link.writeData(new DataPacket(Headers.EXIT));
+                    receiveHandler.setSuccessConnection(false);
+                    logger.debug("The field 'isSuccessConnection'={}", receiveHandler.isSuccessConnection());
+                }
+                else {
+                    String bodyWithLogin= receiveHandler.getLogin() + ":" + body;
+                    link.writeData(new DataPacket(Headers.EXCHANGE, bodyWithLogin));
+                    logger.debug("A new data packet with header[{}],body[{}] has been sent to server[{}]",Headers.EXCHANGE,bodyWithLogin,link.getSocket().getRemoteSocketAddress());
+                }
+
+            }
+        } catch (IOException| InterruptedException e) {
+            receiveHandler.setSuccessConnection(false);
+            logger.debug("The field 'isSuccessConnection'={}", receiveHandler.isSuccessConnection());
+            logger.error("The main client thread was interrupted or IO error has been detected:{}",e.getMessage());
+        }
+        logger.info("{} left this chat", receiveHandler.getLogin());
     }
 
 }
+
+
+
